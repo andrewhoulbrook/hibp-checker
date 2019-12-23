@@ -1,4 +1,4 @@
-# Have I Been Pwnded (HIBP) Shell Script
+# Have I Been Pwned (HIBP) Shell Script
 
 A shell script for the Have I Been Pwned API (Version 3). Checks password hashes and email addresses against HIBP's breach datasets.
 
