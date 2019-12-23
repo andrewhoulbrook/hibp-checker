@@ -10,7 +10,7 @@ The **Pwned Passwords** service allow searching across more than half a billion 
 
 Read more [here](https://haveibeenpwned.com/API/v3#BreachModel) about HIBP email account breach model and searching the API. This script returns all verified and unverified breaches found in HIBP datasets for a given email address.
 
-Version 3 of the API now requires buying an [API Access Key](https://haveibeenpwned.com/API/Key) for searching email addresses. Searching password hashes don't require an Acesss Key.
+Version 3 of the API now requires buying an [API Access Key](https://haveibeenpwned.com/API/Key) for searching email addresses. Searching Pwned Passwords doesn't require an Acesss Key.
 
 ## Using the Script
 
@@ -43,7 +43,6 @@ I'm sure the HIBP script could be adapted for much more interesting use cases to
 
 ## Built with
 
-* [GNU BASH](http://www.gnu.org/software/bash/)
 * [HIBP API](https://haveibeenpwned.com/API/v3)
 
 ## Authors

@@ -16,12 +16,12 @@ then
 		printf "\nERROR: username ${USERNAME} already exists.\n"
 		exit 1
 	else
-		# Check password against HIBP breached datasets
+		# Check password against HIBP datasets
         # Loop until user chooses password not in HIBP 
         BADPASSWORD=1
         while [[ "${BADPASSWORD}" == 1 ]]
         do 
-            # Execute 'expect' script passing $PASSWORD into hibp.sh (HIBP API v3)
+            # Execute 'expect' script passing $PASSWORD into hibp.sh
             HIBP=$(expect -f hibp.expect "${PASSWORD}")
             if [[ "${HIBP}" == *": 0 times."* ]]
             then
