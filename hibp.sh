@@ -26,10 +26,10 @@ function checkPassword() {
     
     # Pass first five chars of password hash (SHA-1) to HIBP, grep results for an exact match on full password hash
     RESULT=$(curl -A "HIBP-Checker-for-Linux" "${URL_PASSWORD}" 2>/dev/null)
-    MATCH=$(echo "${RESULT}" | grep "$(echo "${PASSWORD_HASH_SUFFIX}" | tr [:lower:] [:upper:])") 
+    MATCH=$(echo "${RESULT}" | grep "${PASSWORD_HASH_SUFFIX}") 
     
     # Print matches from HIBP response. If match found, print number of times password is found in HIBP datasets  
-    printf "\nWARNING: password appears in HIBP datasets: %d times.\n" "${RESULT#*:}" 2>/dev/null
+    printf "\nWARNING: password appears in HIBP datasets: %d times.\n" "${MATCH#*:}" 2>/dev/null
 }
 
 # Check an email account in breached datasets via the HIBP
