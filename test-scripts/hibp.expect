@@ -1,0 +1,9 @@
+#!/usr/bin/expect -f
+# Example expect script to input a given password string into HIBP shell script
+
+# Get user's chosen password string
+set newpass [lindex $argv 0]
+
+# Lauch HIBP shell script and send password string to the script
+spawn ./hibp.sh -p
+expect "Enter password:" {send "$newpass\r"}
