@@ -1,58 +1,69 @@
 #!/bin/bash
-# Simple test script to add a new user to a Linux system
-# Checks user's chosen password against HIBP and cracklib 
+# A simple but ugly looking test script to add a new user to a CentOS 7 Linux system
+# Checks user's chosen password against HIBP before standard pam_pwquality / cracklib checks
+
+password_attemtps=3
 
 # Check if user is root
 if [[ $(id -u) -eq 0 ]]
 then
     # Get username and password
-    read -p "Enter username: " USERNAME
-    read -sp "Enter password: " PASSWORD    # don't print to terminal
+    read -p "Enter username: " username
 
     # Check if username already exists, exit if username exists
-    egrep "^${USERNAME}" /etc/passwd >/dev/null
+    egrep "^${username}" /etc/passwd &> /dev/null
     if [[ $? -eq 0 ]]
     then
-		printf "\nERROR: username ${USERNAME} already exists.\n"
+		printf "\nERROR: username ${username} already exists.\n"
 		exit 1
     else
+        # Add new user account
+        useradd "${username}"
+
         # Check password against HIBP datasets
         # Loop until user chooses password not in HIBP 
-        BADPASSWORD=1
-        while [[ "${BADPASSWORD}" == 1 ]]
+        attempt=1
+        while [[ "${attempt}" -le "${password_attempts}"]]
         do 
-            # Execute 'expect' script passing $PASSWORD into hibp.sh
-            HIBP=$(expect -f hibp.expect "${PASSWORD}")
-            if [[ "${HIBP}" == *": 0 times."* ]]
+            stty -echo
+            read -sp "Enter password: " password    # don't print to console
+            
+            # Execute 'expect' script passing $password into hibp.sh
+            hibp=$(expect -f hibp.expect "${password}")
+            if [[ "${hibp}" == *": 0 times."* ]]
             then
-                # Check password via cracklib
-                CRACKLIB=$(cracklib-check<<<"${PASSWORD}")
-                if [[ "${CRACKLIB}" == *": OK"* ]]
-                then 
-                    BADPASSWORD=0   # password accepted    
+                # If pam_pwquality.so configured, let system handle setting of new password
+                egrep "pwquality" /etc/pam.d/password-auth &> /dev/null
+                if [[ $? -eq 0 ]]
+                then
+                    passwd "${username}" <<< "${password}"
+                    if [[ $? -eq 0 ]]
+                    then
+                        exit 0
+                    fi
                 else
-                    printf "\nPassword rejected.\n"
-                    read -sp "Enter a different password: " PASSWORD
-                fi                
-            else
-                printf "\nPassword rejected.\n"
-                read -sp "Enter a different password: " PASSWORD
+                    # If pa_pwquality.so not configured, check if cracklib is installed
+                    if [[ -f "/usr/sbin/cracklib-check" ]]
+                    then
+                        # Check password via cracklib
+                        cracklib=$(cracklib-check <<< "${password}")
+                        if [[ "${cracklib}" == *": OK"* ]]
+                        then 
+                            passwd "${username}" <<< "${password}"
+                            if [[ $? -eq 0 ]]
+                            then
+                                exit 0
+                            fi
+                        fi                
             fi
-        done             
-        
-        # Execute 'python' script to create cryptographic hash (SHA-512) of the user's chosen password
-        PASS=$(python -c "import os; import crypt; print crypt.crypt(\""${PASSWORD}"\", crypt.mksalt(crypt.METHOD_SHA512))")
-
-        # Add user to the system with chosen username and password, check for errors
-        useradd -m -p "${PASS}" "${USERNAME}"
-        if [[ $? -eq 0 ]] 
-        then 
-            printf "\nINFO: username ${USERNAME} has been added to system.\n" 
-        else
-            printf "\nERROR: failed to create new user account for username ${USERNAME}.\n"
-        fi
+            attempt+=1
+            stty echo
+            printf "\nPassword rejected.\n"
+        done
+        printf "\nERROR: Exceeded maximum number of password attempts.\n"
+        exit 1             
     fi
 else
     printf "\nERROR: root privilages are required to add a new user.\n"
-    exit 2
+    exit 1
 fi
